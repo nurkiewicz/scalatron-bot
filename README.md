@@ -1,6 +1,6 @@
 # Gravity-like Scalatron bot
 
-This Scalatron bot implementation uses gravity-like strategy where good cells (e.g. Zugars and Fluppets) attract bot and bad cells repulse it. Resultant force guides the bot to good cells and keeps it away from bad.
+This [Scalatron](https://github.com/scalatron/scalatron) bot implementation uses gravity-like strategy where good cells (e.g. Zugars and Fluppets) attract bot and bad cells repulse it. Resultant force guides the bot to good cells and keeps it away from bad.
 
 By adjusting force strength (think: *electrostatic charge* in [Coulomb force](http://en.wikipedia.org/wiki/Coulomb_force)) different behaviours and priorities can be achieved.
 
@@ -23,8 +23,8 @@ Whole source code is composed of one file in default package. Highly discouraged
 
 	$ mvn package
 
-and copy `target/ScalatronBot.jar` to Scalatron `bots` directory. Alternatively paste `ControlFunctionFactory.scala` contents to the GUI.
+and copy `target/ScalatronBot.jar` to Scalatron `bots` directory. Alternatively paste [`ControlFunctionFactory.scala`](https://github.com/nurkiewicz/scalatron-bot/blob/master/src/main/scala/ControlFunctionFactory.scala) contents to the GUI.
 
 ## License
 
-Apache License 2.0.
+[Apache License 2.0](https://github.com/nurkiewicz/scalatron-bot/blob/master/license.txt).
