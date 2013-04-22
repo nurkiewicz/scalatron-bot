@@ -19,7 +19,7 @@ Not tested with real bots, but this implementation is better by an order of magn
 
 ## Test drive
 
-Whole source code is composed of one file in default package. Highly discouraged practices, but helps interactive testing. You'll find handful of tests, mostly experimenting and sanity checks (build status: [![Build Status](https://travis-ci.org/nurkiewicz/scalatron-bot?branch=master)](https://travis-ci.org/nurkiewicz/scalatron-bot)). Run:
+Whole source code is composed of one file in default package. Highly discouraged practices, but helps interactive testing. You'll find handful of tests, mostly experimenting and sanity checks (build status: [![Build Status](https://travis-ci.org/nurkiewicz/scalatron-bot.png?branch=master)](https://travis-ci.org/nurkiewicz/scalatron-bot)). Run:
 
 	$ mvn package
 
