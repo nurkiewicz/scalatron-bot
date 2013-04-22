@@ -39,8 +39,7 @@ class GeneralStrategy(masterStrategy: Strategy, slaveStrategy: Strategy) extends
 	override def react(input: React) =
 		input.generation match {
 			case 0 => masterStrategy.react(input)
-			case _ =>
-				slaveStrategy.react(input)
+			case _ => slaveStrategy.react(input)
 		}
 }
 
@@ -57,7 +56,6 @@ trait GravityLikeStrategy extends Strategy {
 		Move(resultantDirectionForForces(allForces)) +: super.react(input)
 	}
 }
-
 
 object Strategy {
 	private def cube(x: Double) = x * x * x
