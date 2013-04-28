@@ -1,6 +1,6 @@
 class MasterStrategy extends BotStrategy with AvoidObstacles with GoToAnyNearestGoodCell with SpawnMiniBot
 
-class SlaveStrategy extends FollowEnemyMiniBot with AvoidObstacles with GoToAnyNearestGoodCell with ExplodeCloseToEnemy with SpawnMiniBot with ExplodeWhenLowEnergy
+class SlaveStrategy extends FollowEnemyMiniBot with AvoidObstacles with GoToAnyNearestGoodCell with SpawnMiniBot with ExplodeCloseToEnemy with ExplodeWhenLowEnergy
 
 trait BotStrategy extends GravityLikeStrategy {
 	override def forceFactorOf(cell: Cell, input: React) = cell match {
@@ -9,7 +9,7 @@ trait BotStrategy extends GravityLikeStrategy {
 		case Wall => -10
 		case MyBot => 0
 		case EnemyBot => -80
-		case MyMiniBot => 10
+		case MyMiniBot => 1
 		case EnemyMiniBot => -120
 		case Zugar => 10
 		case Toxifera => -10
@@ -200,12 +200,12 @@ trait SpawnMiniBot extends Strategy {
 
 	def shouldSpawn(input: React) =
 		input.energy > 100 &&
-			(input.time < 200 || spawningPaysOff(input.view))
+			(input.time < 100 || spawningPaysOff(input.view))
 
 	val CellTypeSpawnInfluence = Map(
 		Zugar -> 3,
 		Fluppet -> 4,
-		EnemyMiniBot -> 3,
+		EnemyMiniBot -> 30,
 		EnemyBot -> 4,
 		MyMiniBot -> -10,
 		MyBot -> -2
