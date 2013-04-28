@@ -172,7 +172,7 @@ trait GoToAnyNearestGoodCell extends MoveChangingStrategyDecorator {
 
 trait ExplodeWhenLowEnergy extends Strategy {
 
-	val InterestingCells = Cell.NonEmptyTypes - MyMiniBot - Wall
+	val InterestingCells = Cell.NonEmptyTypes - MyMiniBot - Wall - Toxifera - Snorg
 
 	val LowEnergyThreshold = 80
 
