@@ -1,20 +1,20 @@
-class MasterStrategy extends BotStrategy with AvoidObstacles with GoToAnyNearestGoodCell with SpawnMiniBotInDefence with SpawnMiniBotHarvester
+class MasterStrategy extends BotStrategy with AvoidObstacles with GoToAnyNearestGoodCell with SpawnMiniBotHarvester
 
-class SlaveStrategy extends FollowEnemyMiniBot with AvoidObstacles with GoToAnyNearestGoodCell with ExplodeCloseToEnemy
+class SlaveStrategy extends FollowEnemyMiniBot with AvoidObstacles with GoToAnyNearestGoodCell with ExplodeCloseToEnemy with SpawnMiniBotHarvester
 
 trait BotStrategy extends GravityLikeStrategy {
 	override def forceFactorOf(cell: Cell, input: React) = cell match {
 		case Unknown => 0
 		case Empty =>  0
-		case Wall => -1
+		case Wall => -5
 		case MyBot => 0
 		case EnemyBot => -80
-		case MyMiniBot => 0
+		case MyMiniBot => 1
 		case EnemyMiniBot => -120
 		case Zugar => 55
-		case Toxifera => -5
+		case Toxifera => -10
 		case Fluppet => 50
-		case Snorg => -5
+		case Snorg => -3
 	}
 
 }
@@ -23,15 +23,15 @@ trait FollowEnemyMiniBot extends GravityLikeStrategy {
 	override def forceFactorOf(cell: Cell, input: React) = cell match {
 		case Unknown => 0
 		case Empty =>  0
-		case Wall => -1
-		case MyBot => -2 + input.energy / 100.0     //more energy -> more eager to join parent bot
-		case EnemyBot => 80
+		case Wall => -0.5
+		case MyBot => (input.age - 10) * 20
+		case EnemyBot => 120
 		case MyMiniBot => -1
-		case EnemyMiniBot => 120
+		case EnemyMiniBot => 80
 		case Zugar => 25
-		case Toxifera => -4
+		case Toxifera => -1
 		case Fluppet => 20
-		case Snorg => -4
+		case Snorg => -1
 	}
 }
 
@@ -47,13 +47,30 @@ trait GravityLikeStrategy extends Strategy {
 
 	def forceFactorOf(cell: Cell, input: React): Double
 
+	private def currentGravityAngle(time: Int, period: Int) = (((time / period) * 13) % 8) / 8.0 * 2 * math.Pi
+
+	private def currentGlobalGravityForce(time: Int, force: Int, period: Int) = {
+		val gravityAngle = currentGravityAngle(time, period)
+		Pos(
+			(math.sin(gravityAngle) * force).toInt,
+			(math.cos(gravityAngle) * force).toInt
+		)
+	}
+
 	abstract override def react(input: React): Seq[OutputOpcode] = {
 		import Strategy._
 		val allForces = for {
-			cellType <- Cell.AllTypes
+			cellType <- Cell.NonEmptyTypes
 			forces <- resultantForcesOf(input.view, forceFactorOf(cellType, input), cellType)
 		} yield forces
-		Move(resultantDirectionForForces(allForces)) +: super.react(input)
+
+		if(input.generation > 0) {
+			val forceToMaster = (input.age - 10).min(300)
+			val masterForce = input.masterPos * forceToMaster
+			Move(resultantDirectionForForces(allForces + masterForce + currentGlobalGravityForce(input.time, 500, 30))) +: super.react(input)
+		} else {
+			Move(resultantDirectionForForces(allForces + currentGlobalGravityForce(input.time, 100000, 220))) +: super.react(input)
+		}
 	}
 }
 
@@ -90,11 +107,12 @@ trait MoveChangingStrategyDecorator extends Strategy {
 }
 
 trait AvoidObstacles extends MoveChangingStrategyDecorator {
+	private val avoid = Set[Cell](Wall, Snorg, MyMiniBot)
 	private def avoidObstacles(view: View, direction: Direction) = {
 
 		def tryDirection(direction: Direction) = {
 			val cellAfterMove = view(Pos.Mid + direction)
-			if(cellAfterMove != Wall && cellAfterMove != Snorg) {
+			if(!(avoid contains cellAfterMove)) {
 				Some(direction)
 			} else {
 				None
@@ -134,6 +152,8 @@ trait ExplodeCloseToEnemy extends Strategy {
 }
 
 trait GoToAnyNearestGoodCell extends MoveChangingStrategyDecorator {
+	private val GoodCells = Set[Cell](Zugar, Fluppet)
+
 	abstract override def changeMove(view: View, original: Move): Move = {
 		val changedMove = super.changeMove(view, original)
 		val cellAfterOriginalMove = view(Pos.Mid + changedMove.direction)
@@ -141,7 +161,7 @@ trait GoToAnyNearestGoodCell extends MoveChangingStrategyDecorator {
 			val maybeAlternativeMove = for {
 				alternativeMove <- Direction.All
 				if(alternativeMove != changedMove.direction)
-				if(view(Pos.Mid + alternativeMove) == Zugar || view(Pos.Mid + alternativeMove) == Fluppet)
+				if(GoodCells contains view(Pos.Mid + alternativeMove))
 			} yield Move(alternativeMove)
 			maybeAlternativeMove.headOption.getOrElse(changedMove)
 		} else {
@@ -150,48 +170,25 @@ trait GoToAnyNearestGoodCell extends MoveChangingStrategyDecorator {
 	}
 }
 
-trait SpawnMiniBotInDefence extends Strategy {
-	abstract override def react(input: React) = {
-		val view = input.view
-		val enemyMiniBotCount = view.allOfType(EnemyMiniBot).size
-		val myMiniBotCount = view.allOfType(MyMiniBot).size
-		if(enemyMiniBotCount > myMiniBotCount) {
-			spawnMiniBot(view) +: super.react(input)
-		} else {
-			super.react(input)
-		}
-	}
-
-	private def spawnMiniBot(view: View) = {
-		val enemyBotPos = view.furthestOfType(EnemyMiniBot).get   //has to be at least one
-		val myMiniBotDir = Direction(enemyBotPos)
-		Spawn(myMiniBotDir)
-	}
-}
-
 trait SpawnMiniBotHarvester extends Strategy {
+
 	abstract override def react(input: React) = {
-		val view = input.view
-		val zugarsVisible = view.allOfType(Zugar)
-		val fluppetsVisible = view.allOfType(Fluppet)
-		val myMiniBotsVisible = view.allOfType(MyMiniBot)
-		val enoughGoodCells = zugarsVisible.size * 2 + fluppetsVisible.size * 4 - myMiniBotsVisible.size * 15
-		if(enoughGoodCells >= 15) {
-			spawnMiniBotInNonConflictingDirection(view, input)
+		if(input.slaves < 32)
+			spawnMiniBotInNonConflictingDirection(input)
+		else
+			super.react(input)
+	}
+
+	private def spawnMiniBotInNonConflictingDirection(input: React): Seq[OutputOpcode] = {
+		if(input.energy > 100) {
+			val slaveName = input.time.toString
+			super.react(input) flatMap {
+				case m@Move(mainBotDir) => Seq(m, Spawn(mainBotDir.turnBack, slaveName))
+				case x => Seq(x)
+			}
 		} else {
 			super.react(input)
 		}
-	}
-
-	private def spawnMiniBotInNonConflictingDirection(view: View, input: React): Seq[OutputOpcode] = {
-		import Strategy._
-		val miniBotForces = resultantForcesOf(view, 50, Fluppet) ++ resultantForcesOf(view, 20, Zugar)
-		val miniBotDir = resultantDirectionForForces(miniBotForces)
-		val otherOpcodes = super.react(input) map {
-			case Move(mainBotDir) if (mainBotDir == miniBotDir) => Move(mainBotDir.turnBack)
-			case x => x
-		}
-		Spawn(miniBotDir) +: otherOpcodes
 	}
 }
 
@@ -202,9 +199,12 @@ class ControlFunctionFactory {
 
 class Bot(strategy: Strategy) {
 
-	def respond(input: String) = CommandParser(input) match {
-		case r: React => strategy.react(r).map(_.toString).mkString("|")
-		case _ => ""
+	def respond(input: String) = {
+		val outputOpcodes = CommandParser(input) match {
+			case r: React => strategy.react(r)
+			case _ => Nil
+		}
+		outputOpcodes.map(_.toString).mkString("|")
 	}
 }
 
@@ -220,7 +220,7 @@ case class Explode(size: Int) extends OutputOpcode {
 	override def toString = "Explode(size=" + size + ")"
 }
 
-case class Spawn(direction: Direction, name: String = "Slave", energy: Int = 100) extends OutputOpcode {
+case class Spawn(direction: Direction, name: String, energy: Int = 100) extends OutputOpcode {
 	override def toString = "Spawn(direction=" + direction + ",name=" + name + ",energy=" + energy + ")"
 }
 
@@ -234,7 +234,10 @@ case class Say(text: String) extends OutputOpcode {
 
 sealed trait InputOpcode
 case class Welcome(name: String, apocalypse: Int, round: Int) extends InputOpcode
-case class React(generation: Int, time: Int, view: View, energy: Long) extends InputOpcode
+case class React(generation: Int, time: Int, view: View, energy: Long, slaves: Int, name: String, masterPos: Pos) extends InputOpcode {
+	def age = if(generation == 0) time else time - name.toInt
+}
+
 case class Goodbye(energy: Int) extends InputOpcode
 case class RawOpcode(name: String, params: Map[String, String])
 
@@ -252,12 +255,18 @@ object CommandParser {
 	}
 
 	def fromRawOpcode(raw: RawOpcode) = raw.name match {
-		case "Welcome" => Welcome(raw.params("name"), raw.params("apocalypse").toInt, raw.params("round").toInt)
+		case "Welcome" => Welcome(
+			raw.params("name"),
+			raw.params("apocalypse").toInt,
+			raw.params("round").toInt)
 		case "React" => React(
-			raw.params("generation").toInt, 
-			raw.params("time").toInt, 
-			new View(raw.params("view")), 
-			raw.params("energy").toLong
+			raw.params("generation").toInt,
+			raw.params("time").toInt,
+			new View(raw.params("view")),
+			raw.params("energy").toLong,
+			raw.params.get("slaves").map(_.toInt).getOrElse(0),
+			raw.params("name"),
+			raw.params.get("master").map(Pos.apply).getOrElse(Pos.Mid)
 		)
 		case "Goodbye" => Goodbye(raw.params("energy").toInt)
 	}
@@ -266,7 +275,8 @@ object CommandParser {
 }
 
 object Cell {
-	val AllTypes = Seq[Cell](Unknown, Empty, Wall, MyBot, EnemyBot, MyMiniBot, EnemyMiniBot, Zugar, Toxifera, Fluppet, Snorg)
+	val AllTypes = Set[Cell](Unknown, Empty, Wall, MyBot, EnemyBot, MyMiniBot, EnemyMiniBot, Zugar, Toxifera, Fluppet, Snorg)
+	val NonEmptyTypes = AllTypes - Unknown - Empty
 }
 
 sealed trait Cell
@@ -284,6 +294,10 @@ case object Snorg extends Cell
 
 case object Pos {
 	val Mid = Pos(0, 0)
+	def apply(s: String): Pos = {
+		val Array(x, y) = s.split(":").map(_.toInt)
+		Pos(x, y)
+	}
 }
 
 case class Pos(x: Int, y: Int)  {
@@ -294,6 +308,7 @@ case class Pos(x: Int, y: Int)  {
 	def +(dir: Direction): Pos = this + dir.offset
 	def -(other: Pos) = Pos(x - other.x, y - other.y)
 	def *(value: Int) = Pos(x * value, y * value)
+	def /(value: Int) = Pos(x / value, y / value)
 
 	override def toString = x + ":" + y
 	override def equals(that: Any) = that match {
@@ -310,8 +325,9 @@ case object Direction {
 
 	def apply(pos: Pos): Direction = if(pos != Pos.Mid)
 		Direction.apply(angle(pos) % 8)
-	else
+	else {
 		Direction.apply((math.random * 8).toInt)
+	}
 
 	val East = new Direction(0)
 	val SouthEast = new Direction(1)
