@@ -1,6 +1,6 @@
 class MasterStrategy extends BotStrategy with AvoidObstacles with GoToAnyNearestGoodCell with SpawnMiniBotHarvester
 
-class SlaveStrategy extends FollowEnemyMiniBot with AvoidObstacles with GoToAnyNearestGoodCell with ExplodeCloseToEnemy with SpawnMiniBotHarvester
+class SlaveStrategy extends FollowEnemyMiniBot with AvoidObstacles with GoToAnyNearestGoodCell with ExplodeCloseToEnemy with SpawnMiniBotHarvester with ExplodeWhenLowEnergy
 
 trait BotStrategy extends GravityLikeStrategy {
 	override def forceFactorOf(cell: Cell, input: React) = cell match {
@@ -168,6 +168,25 @@ trait GoToAnyNearestGoodCell extends MoveChangingStrategyDecorator {
 			changedMove
 		}
 	}
+}
+
+trait ExplodeWhenLowEnergy extends Strategy {
+
+	val InterestingCells = Cell.NonEmptyTypes - MyMiniBot - Wall
+
+	val LowEnergyThreshold = 80
+
+	def interestingCellsInNeighbourhood(view: View) =
+		for {
+			cellType <- InterestingCells
+			cell <- view.allOfType(cellType)
+		} yield cell
+
+	override def react(input: React): Seq[OutputOpcode] =
+		if(input.energy < LowEnergyThreshold && interestingCellsInNeighbourhood(input.view).isEmpty) {
+			Seq(Explode(10))
+		} else
+			super.react(input)
 }
 
 trait SpawnMiniBotHarvester extends Strategy {
