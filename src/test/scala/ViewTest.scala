@@ -27,8 +27,8 @@ class ViewTest extends AbstractBaseTestCase {
 			v(Pos(2, -2)) should equal (EnemyBot)
 			v(Pos(0, 0)) should equal (MyBot)
 			v(Pos(2, 1)) should equal (Snorg)
-			v.allOfType(Wall) should equal (Seq(Pos(0, -2), Pos(2, -1)))
-			v.allOfType(Toxifera) should equal (Seq(Pos(-2, 0), Pos(1, 2)))
+			v.allOfType(Wall) should equal (Set(Pos(0, -2), Pos(2, -1)))
+			v.allOfType(Toxifera) should equal (Set(Pos(-2, 0), Pos(1, 2)))
 		}
 
 	}

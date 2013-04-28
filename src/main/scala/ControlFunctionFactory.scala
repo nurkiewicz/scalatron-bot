@@ -265,7 +265,7 @@ case class Say(text: String) extends OutputOpcode {
 
 sealed trait InputOpcode
 case class Welcome(name: String, apocalypse: Int, round: Int) extends InputOpcode
-case class React(generation: Int, time: Int, view: View, energy: Long, slaves: Int, name: String, masterPos: Pos) extends InputOpcode {
+case class React(generation: Int, time: Int, view: View, energy: Long, name: String, masterPos: Pos) extends InputOpcode {
 	def age = if(generation == 0) time else time - name.toInt
 }
 
@@ -295,7 +295,6 @@ object CommandParser {
 			raw.params("time").toInt,
 			new View(raw.params("view")),
 			raw.params("energy").toLong,
-			raw.params.get("slaves").map(_.toInt).getOrElse(0),
 			raw.params("name"),
 			raw.params.get("master").map(Pos.apply).getOrElse(Pos.Mid)
 		)
@@ -378,65 +377,5 @@ case class Direction(dirIdx: Int) {
 	def rotateLittleBitLeft = Direction((dirIdx + 7) % 8)
 	def rotateLittleBitRight = Direction((dirIdx + 1) % 8)
 	def turnBack = Direction((dirIdx + 4) % 8)
-}
-
-class View(view: String) {
-	val size = math.sqrt(view.size).toInt
-	private val offset = Pos(size / 2, size / 2)
-
-	val cells = view.map(translate).grouped(size).map(_.toIndexedSeq).toIndexedSeq
-
-	def apply(p: Pos) = {
-		val withOffset = p + offset
-		getAbsolute(withOffset.x, withOffset.y)
-	}
-
-	private def getAbsolute(x: Int, y: Int) = {
-		val maybeCell = for {
-			row <- safeGet(cells, y)
-			cell <- safeGet(row, x)
-		} yield cell
-		maybeCell getOrElse Unknown
-	}
-
-	def allOfType(cell: Cell) = for {
-		y <- 0 until size
-		x <- 0 until size
-		if (getAbsolute(x, y) == cell)
-	} yield Pos(x, y) - offset
-
-	def closestOfType(cell: Cell) = bestMatchingBy(cell, -Pos.Mid.distance(_))
-
-	def furthestOfType(cell: Cell) = bestMatchingBy(cell, Pos.Mid.distance)
-
-	private def bestMatchingBy[B](cell: Cell, weightFun: Pos => B)(implicit cmp: Ordering[B]): Option[Pos] =
-		allOfType(cell) match {
-			case Seq() => None
-			case list => Some(list.maxBy(weightFun))
-		}
-
-	private def safeGet[T](seq: Seq[T], index: Int) =
-		if (index >= 0 && index < seq.size)
-			Some(seq(index))
-		else
-			None
-
-	private def translate(c: Char): Cell = {
-		c match {
-			case '?' => Unknown
-			case '_' => Empty
-			case 'W' => Wall
-			case 'M' => MyBot
-			case 'm' => EnemyBot
-			case 'S' => MyMiniBot
-			case 's' => EnemyMiniBot
-			case 'P' => Zugar
-			case 'p' => Toxifera
-			case 'B' => Fluppet
-			case 'b' => Snorg
-		}
-	}
-
-	override def toString = view.grouped(size).mkString("\n")
 }
 

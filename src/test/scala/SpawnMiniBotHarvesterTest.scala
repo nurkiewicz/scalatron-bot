@@ -45,7 +45,7 @@ class SpawnMiniBotHarvesterTest extends AbstractBaseTestCase {
 			val outputOpcodes = strategy.react(react(v))
 
 			Then("")
-			outputOpcodes should equal (Seq(Spawn(Direction.North)))
+			outputOpcodes should equal (Seq(Spawn(Direction.North, "0")))
 		}
 
 		scenario("Should not send mini-bot when already one on its way") {

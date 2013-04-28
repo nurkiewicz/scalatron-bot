@@ -12,6 +12,6 @@ abstract class AbstractBaseTestCase extends FeatureSpec with GivenWhenThen with 
 
 	def buildView(s: String) = new View(s.stripMargin.filterNot(Character.isWhitespace))
 
-	def react(view: View) = React(0, 0, view, 0)
+	def react(view: View) = React(0, 0, view, 0, "", Pos.Mid)
 
 }
