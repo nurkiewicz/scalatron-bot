@@ -6,7 +6,7 @@ class SpawnMiniBotHarvesterTest extends AbstractBaseTestCase {
 
 	feature("Harvester mini-bot") {
 
-		val strategy = new SpawnMiniBotHarvester {}
+		val strategy = new SpawnMiniBot {}
 
 		scenario("Should not send harvester mini-bot when too few fluppets") {
 			Given("")
