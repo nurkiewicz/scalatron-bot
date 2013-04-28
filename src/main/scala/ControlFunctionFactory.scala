@@ -6,14 +6,14 @@ trait BotStrategy extends GravityLikeStrategy {
 	override def forceFactorOf(cell: Cell, input: React) = cell match {
 		case Unknown => 0
 		case Empty =>  0
-		case Wall => -5
+		case Wall => -10
 		case MyBot => 0
 		case EnemyBot => -80
-		case MyMiniBot => 1
+		case MyMiniBot => 10
 		case EnemyMiniBot => -120
-		case Zugar => 55
+		case Zugar => 10
 		case Toxifera => -10
-		case Fluppet => 50
+		case Fluppet => 8
 		case Snorg => -3
 	}
 
@@ -26,7 +26,7 @@ trait FollowEnemyMiniBot extends GravityLikeStrategy {
 		case Wall => -0.5
 		case MyBot => (input.age - 10) * 20
 		case EnemyBot => 120
-		case MyMiniBot => -1
+		case MyMiniBot => -10
 		case EnemyMiniBot => 80
 		case Zugar => 25
 		case Toxifera => -1
@@ -69,7 +69,7 @@ trait GravityLikeStrategy extends Strategy {
 			val masterForce = input.masterPos * forceToMaster
 			Move(resultantDirectionForForces(allForces + masterForce + currentGlobalGravityForce(input.time, 500, 30))) +: super.react(input)
 		} else {
-			Move(resultantDirectionForForces(allForces + currentGlobalGravityForce(input.time, 100000, 220))) +: super.react(input)
+			Move(resultantDirectionForForces(allForces + currentGlobalGravityForce(input.time, 100000, 300))) +: super.react(input)
 		}
 	}
 }
