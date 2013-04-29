@@ -22,11 +22,11 @@ Scalatron 1.0 does not provide number of mini-bots alive and max number of slave
 
 ## Test drive
 
-Whole source code is composed of one file in default package. Highly discouraged practices, but helps interactive testing. You'll find handful of tests, mostly experimenting and sanity checks (build status: [![Build Status](https://travis-ci.org/nurkiewicz/scalatron-bot.png?branch=master)](https://travis-ci.org/nurkiewicz/scalatron-bot)). Run:
+You'll find handful of tests, mostly experimenting and sanity checks (build status: [![Build Status](https://travis-ci.org/nurkiewicz/scalatron-bot.png?branch=master)](https://travis-ci.org/nurkiewicz/scalatron-bot)). Bulding:
 
 	$ mvn package
 
-and copy `target/ScalatronBot.jar` to Scalatron's `bots` directory. Use parameters shown above to start Scalatron.
+Then copy `target/ScalatronBot.jar` to Scalatron's `bots` directory. Use parameters shown above to start Scalatron.
 
 ## License
 
