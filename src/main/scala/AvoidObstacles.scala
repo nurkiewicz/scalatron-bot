@@ -11,14 +11,13 @@ trait AvoidObstacles extends MoveChangingStrategyDecorator {
 			}
 		}
 
-		def tryMirrorDirections(left: Direction, right: Direction, max: Int): Seq[Option[Direction]] = {
-			if(max <= 0)
+		def tryMirrorDirections(left: Direction, right: Direction, max: Int): Seq[Option[Direction]] =
+			if (max <= 0)
 				Nil
 			else
 				tryDirection(left) +:
 					tryDirection(right) +:
 					tryMirrorDirections(left.rotateLittleBitLeft, right.rotateLittleBitRight, max - 1)
-		}
 
 		(tryDirection(direction) +: tryMirrorDirections(direction.rotateLittleBitLeft, direction.rotateLittleBitRight, 4)).flatten
 	}
