@@ -26,7 +26,11 @@ trait SpawnMiniBot extends Strategy {
 	private def spawnMiniBotInNonConflictingDirection(input: React): Seq[OutputOpcode] = {
 		val slaveName = input.time.toString
 		super.react(input) flatMap {
-			case m@Move(mainBotDir) => Seq(m, Spawn(mainBotDir.turnBack, slaveName))
+			case m@Move(mainBotDir) => Seq(
+				m,
+				Spawn(mainBotDir.rotateLittleBitLeft, slaveName),
+				Spawn(mainBotDir.rotateLittleBitRight, slaveName)
+			)
 			case x => Seq(x)
 		}
 	}
