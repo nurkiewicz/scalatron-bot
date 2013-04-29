@@ -12,19 +12,19 @@ trait GravityLikeStrategy extends Strategy {
 		)
 	}
 
-	abstract override def react(input: React): Seq[OutputOpcode] = {
-		import Strategy._
-		val allForces = for {
-			cellType <- Cell.NonEmptyTypes
-			forces <- resultantForcesOf(input.view, forceFactorOf(cellType, input), cellType)
-		} yield forces
+	private def forceToMaster(input: React) = input.masterPos * (input.age - 10).min(300)
 
-		if(input.generation > 0) {
-			val forceToMaster = (input.age - 10).min(300)
-			val masterForce = input.masterPos * forceToMaster
-			Move(resultantDirectionForForces(allForces + masterForce + currentGlobalGravityForce(input.time, 500, 30))) +: super.react(input)
+	private def forcesToCells(input: React) = for {
+		cellType <- Cell.NonEmptyTypes.toSeq
+		forces <- Strategy.resultantForcesOf(input.view, forceFactorOf(cellType, input), cellType)
+	} yield forces
+
+	abstract override def react(input: React): Seq[OutputOpcode] = {
+		val extraGlobalForce = if(input.isMiniBot) {
+			currentGlobalGravityForce(input.time, 500, 30) + forceToMaster(input)
 		} else {
-			Move(resultantDirectionForForces(allForces + currentGlobalGravityForce(input.time, 100000, 300))) +: super.react(input)
+			currentGlobalGravityForce(input.time, 100000, 300)
 		}
+		Move(Strategy.resultantDirectionForForces(extraGlobalForce +: forcesToCells(input))) +: super.react(input)
 	}
 }
