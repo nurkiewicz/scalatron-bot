@@ -14,7 +14,7 @@ Another interesting behaviour is exploding when mini-bot's surrounding is not at
 
 ## Efficiency
 
-This implementation is better by few orders of magnitude compared to [`Reference` bot](https://github.com/scalatron/scalatron/blob/master/Scalatron/samples/Example%20Bot%2001%20-%20Reference/src/Bot.scala) (700K vs. 4K energy units, average after 20 rounds one-on-one; **924 915** record). Not bad for 350 lines of stateless code. Tested with the following options:
+This implementation is better by few orders of magnitude compared to [`Reference` bot](https://github.com/scalatron/scalatron/blob/master/Scalatron/samples/Example%20Bot%2001%20-%20Reference/src/Bot.scala) (700K vs. 4K energy units, average after 20 rounds one-on-one; **934 841** record). Not bad for 350 lines of stateless code. Tested with the following options:
 
     $ java -jar Scalatron.jar -x 200 -y 200 -browser no -maxslaves 32
 
